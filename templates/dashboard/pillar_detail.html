@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}{{ pillar.name }} · SDLC Guard{% endblock %}
+{% block content %}
+<h1>{{ pillar.name }}</h1>
+<p class="sub">{{ pillar.description }}</p>
+<div class="facts">
+  <div><strong><span class="badge {{ summary.level }}">{{ summary.level }}</span></strong><span>risk level (score {{ summary.score }}/100)</span></div>
+  <div><strong>{{ summary.open }}</strong><span>open findings</span></div>
+  <div><strong>{{ summary.counts.Critical }}</strong><span>critical</span></div>
+  <div><strong>{{ summary.counts.High }}</strong><span>high</span></div>
+</div>
+<div class="grid2b">
+  <section class="panel"><h2>Severity mix</h2>
+    <img alt="Donut chart of this pillar's open findings by severity" src="data:image/png;base64,{{ chart_severity }}"></section>
+  <section class="panel"><h2>Top techniques</h2>
+    <img alt="Bar chart of the top techniques for this pillar" src="data:image/png;base64,{{ chart_techniques }}"></section>
+</div>
+<section class="panel"><h2>Trend</h2>
+  <img alt="Line chart of new findings per week for this pillar" src="data:image/png;base64,{{ chart_trend }}"></section>
+<section class="panel"><h2>Open incidents</h2>
+  <table><thead><tr><th>Incident</th><th>Finding</th><th>Technique</th><th>Severity</th><th>Asset</th><th>Source</th></tr></thead>
+  <tbody>{% for f in findings %}
+    <tr><td>{{ f.incident_ref|default:"-" }}</td><td><a href="{% url 'finding-detail' f.pk %}">{{ f.title }}</a></td>
+        <td>{{ f.technique.name }}</td><td><span class="badge {{ f.severity }}">{{ f.severity }}</span></td>
+        <td>{{ f.affected_asset|default:"-" }}</td><td>{{ f.data_source|default:"-" }}</td></tr>
+  {% empty %}<tr><td colspan="6" class="muted">No open findings for this pillar.</td></tr>{% endfor %}</tbody></table>
+</section>
+<div class="grid2b">
+  <section class="panel"><h2>Catalogued techniques</h2>
+    <table><tbody>{% for t in techniques %}<tr><td class="tag">{{ t.sitf_id }}</td><td>{{ t.name }}</td><td>{{ t.base_severity }}</td></tr>{% endfor %}</tbody></table></section>
+  <section class="panel"><h2>Data sources</h2>
+    <table><tbody>{% for s in sources %}<tr><td>{{ s.name }}</td><td>{{ s.get_status_display }}</td><td class="tag">{{ s.last_sync|date:"d M H:i"|default:"never" }}</td></tr>
+    {% empty %}<tr><td class="muted">No sources connected.</td></tr>{% endfor %}</tbody></table></section>
+</div>
+{% endblock %}

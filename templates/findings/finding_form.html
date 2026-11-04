@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block title %}{% if object %}Edit{% else %}Raise{% endif %} finding · SDLC Guard{% endblock %}
+{% block content %}
+<h1>{% if object %}Edit finding{% else %}Raise a finding{% endif %}</h1>
+<p class="sub">Severity is calculated automatically from the 0–10 score.</p>
+<section class="panel"><form method="post" novalidate>{% csrf_token %}
+{% for field in form %}<div class="form-row"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}</div>{% endfor %}
+<button class="btn" type="submit">Save finding</button>
+<a class="btn alt" href="{% url 'finding-list' %}">Cancel</a></form></section>
+{% endblock %}

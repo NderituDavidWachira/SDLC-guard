@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block title %}{{ object.title }} · SDLC Guard{% endblock %}
+{% block content %}
+<h1>{{ object.title }}</h1>
+<p class="sub">{{ object.incident_ref|default:"No incident reference" }} · {{ object.technique.pillar.name }} · detected {{ object.detected_at|date:"d M Y H:i" }}</p>
+<div class="facts">
+  <div><strong><span class="badge {{ object.severity }}">{{ object.severity }}</span></strong><span>severity (score {{ object.score }})</span></div>
+  <div><strong>{{ object.get_status_display }}</strong><span>status</span></div>
+</div>
+<section class="panel"><h2>Incident information</h2>
+<table><tbody>
+<tr><th scope="row">Technique</th><td>{{ object.technique }}</td></tr>
+<tr><th scope="row">Affected asset</th><td>{{ object.affected_asset|default:"-" }}</td></tr>
+<tr><th scope="row">Data source</th><td>{{ object.data_source|default:"-" }}</td></tr>
+<tr><th scope="row">Reported by</th><td>{{ object.reported_by|default:"-" }}</td></tr>
+<tr><th scope="row">Description</th><td>{{ object.description|default:"-"|linebreaksbr }}</td></tr>
+</tbody></table>
+{% if can_write %}<p><a class="btn alt" href="{% url 'finding-edit' object.pk %}">Edit finding</a></p>{% endif %}
+</section>
+<section class="panel"><h2>Remediation tasks</h2>
+<table><thead><tr><th>Assignee</th><th>Due</th><th>Notes</th><th>Status</th></tr></thead><tbody>
+{% for t in object.tasks.all %}<tr><td>{{ t.assignee|default:"Unassigned" }}</td><td>{{ t.due_date|date:"d M Y"|default:"-" }}</td><td>{{ t.notes }}</td>
+<td>{% if can_update_task %}<form method="post" action="{% url 'task-status' t.pk %}">{% csrf_token %}
+<select name="status" aria-label="Task status">{% for v, l in task_statuses %}<option value="{{ v }}" {% if t.status == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select>
+<button class="btn alt" type="submit">Save</button></form>{% else %}{{ t.get_status_display }}{% endif %}</td></tr>
+{% empty %}<tr><td colspan="4" class="muted">No remediation tasks yet.</td></tr>{% endfor %}</tbody></table>
+</section>
+{% if can_write %}
+<section class="panel"><h2>Assign a remediation task</h2>
+<form method="post" action="{% url 'task-create' object.pk %}">{% csrf_token %}
+{% for field in task_form %}<div class="form-row"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{{ field.errors }}</div>{% endfor %}
+<button class="btn" type="submit">Assign task</button></form></section>
+{% endif %}
+{% endblock %}

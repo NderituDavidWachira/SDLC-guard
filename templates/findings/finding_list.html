@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}Findings · SDLC Guard{% endblock %}
+{% block content %}
+<h1>Findings</h1>
+<p class="sub">Every security finding recorded across the SDLC.</p>
+<form method="get" class="filters">
+  <div><label for="f-pillar">Pillar</label><select name="pillar" id="f-pillar"><option value="">All</option>
+    {% for p in pillars %}<option value="{{ p.slug }}" {% if params.pillar == p.slug %}selected{% endif %}>{{ p.name }}</option>{% endfor %}</select></div>
+  <div><label for="f-sev">Severity</label><select name="severity" id="f-sev"><option value="">All</option>
+    {% for v, l in severities %}<option value="{{ v }}" {% if params.severity == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+  <div><label for="f-status">Status</label><select name="status" id="f-status"><option value="">All</option>
+    {% for v, l in statuses %}<option value="{{ v }}" {% if params.status == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+  <button class="btn" type="submit">Filter</button>
+  {% if user.role != 'devops' %}<a class="btn alt" href="{% url 'findings-export' %}?{{ qs }}">Export CSV</a>{% endif %}
+</form>
+<section class="panel">
+<table><thead><tr><th>Incident</th><th>Finding</th><th>Pillar</th><th>Severity</th><th>Status</th><th>Detected</th></tr></thead>
+<tbody>{% for f in object_list %}
+<tr><td>{{ f.incident_ref|default:"-" }}</td><td><a href="{% url 'finding-detail' f.pk %}">{{ f.title }}</a></td>
+<td>{{ f.technique.pillar.name }}</td><td><span class="badge {{ f.severity }}">{{ f.severity }}</span></td>
+<td>{{ f.get_status_display }}</td><td>{{ f.detected_at|date:"d M Y" }}</td></tr>
+{% empty %}<tr><td colspan="6" class="muted">No findings match these filters.</td></tr>{% endfor %}</tbody></table>
+{% if is_paginated %}<div class="pager">
+  {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}&{{ qs }}">Previous</a>{% endif %}
+  <span class="muted">Page {{ page_obj.number }} of {{ paginator.num_pages }}</span>
+  {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}&{{ qs }}">Next</a>{% endif %}
+</div>{% endif %}
+</section>
+{% endblock %}
